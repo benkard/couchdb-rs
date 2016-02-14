@@ -16,6 +16,7 @@ struct QueryParams<K>
 {
     endkey: Option<K>,
     reduce: Option<bool>,
+    group_level: Option<i32>,
     startkey: Option<K>,
 }
 
@@ -25,6 +26,7 @@ impl<K> Default for QueryParams<K> where K: serde::Serialize
         QueryParams {
             endkey: Default::default(),
             reduce: Default::default(),
+            group_level: Default::default(),
             startkey: Default::default(),
         }
     }
@@ -49,6 +51,9 @@ impl<K> QueryParams<K> where K: serde::Serialize
         }
         if let Some(x) = self.reduce {
             v.push(("reduce".to_string(), x.to_string()));
+        }
+        if let Some(x) = self.group_level {
+            v.push(("group_level".to_string(), x.to_string()));
         }
         if let Some(x) = self.startkey {
             let s = try!(serde_json::to_string(&x)
@@ -107,6 +112,12 @@ impl<'a, P, K, V> GetView<'a, P, K, V>
     /// Sets whether to run the `reduce` view function.
     pub fn reduce(mut self, v: bool) -> Self {
         self.query.reduce = Some(v);
+        self
+    }
+
+    /// Sets the group level in case reduction is done.
+    pub fn group_level(mut self, v: i32) -> Self {
+        self.query.group_level = Some(v);
         self
     }
 
@@ -180,6 +191,7 @@ mod tests {
         let query = QueryParams {
             endkey: Some("foo"),
             reduce: Some(true),
+            group_level: None,
             startkey: Some("bar"),
         };
         let expected = vec![
